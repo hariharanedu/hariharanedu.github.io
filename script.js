@@ -1,243 +1,366 @@
 /* ============================================
-   HARI'S GARAGE - Interactive JavaScript
+   HARI'S GARAGE - Movie Portal JavaScript
    ============================================ */
 
-// Wait for DOM to load
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize all animations and interactions
-    initScrollAnimations();
-    initParallaxEffect();
-    initHoverEffects();
-    initTypingEffect();
+    initHeader();
+    initSearch();
+    initAnimations();
+    initModal();
+    initMobileMenu();
 });
 
-// Scroll-based reveal animations
-function initScrollAnimations() {
+// ============================================
+// HEADER - Sticky & Scroll Effects
+// ============================================
+function initHeader() {
+    const header = document.querySelector('.header');
+    let lastScroll = 0;
+
+    window.addEventListener('scroll', () => {
+        const currentScroll = window.pageYOffset;
+
+        // Add shadow on scroll
+        if (currentScroll > 50) {
+            header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+        } else {
+            header.style.boxShadow = 'none';
+        }
+
+        lastScroll = currentScroll;
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            const href = this.getAttribute('href');
+            if (href === '#') return;
+
+            e.preventDefault();
+            const target = document.querySelector(href);
+            if (target) {
+                const headerHeight = header.offsetHeight;
+                const targetPosition = target.offsetTop - headerHeight;
+                window.scrollTo({
+                    top: targetPosition,
+                    behavior: 'smooth'
+                });
+            }
+        });
+    });
+}
+
+// ============================================
+// SEARCH FUNCTIONALITY
+// ============================================
+function initSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+
+    if (!searchInput || !searchBtn) return;
+
+    const handleSearch = () => {
+        const query = searchInput.value.trim();
+        if (query) {
+            // Show modal first, then redirect
+            showModal();
+        } else {
+            searchInput.focus();
+            searchInput.classList.add('shake');
+            setTimeout(() => searchInput.classList.remove('shake'), 500);
+        }
+    };
+
+    searchBtn.addEventListener('click', handleSearch);
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleSearch();
+    });
+
+    // Add shake animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        .shake { animation: shake 0.5s ease; }
+    `;
+    document.head.appendChild(style);
+}
+
+// ============================================
+// MODAL
+// ============================================
+function initModal() {
+    const modal = document.getElementById('telegramModal');
+    if (!modal) return;
+
+    // Close modal on background click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+
+    // Close on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+    });
+}
+
+function showModal() {
+    const modal = document.getElementById('telegramModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeModal() {
+    const modal = document.getElementById('telegramModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+// Global function for onclick handlers
+window.redirectToTelegram = function () {
+    showModal();
+};
+
+window.closeModal = closeModal;
+
+// ============================================
+// MOBILE MENU
+// ============================================
+function initMobileMenu() {
+    const menuBtn = document.getElementById('mobileMenuBtn');
+    const nav = document.querySelector('.nav');
+
+    if (!menuBtn) return;
+
+    menuBtn.addEventListener('click', () => {
+        menuBtn.classList.toggle('active');
+
+        // Toggle nav visibility (you can expand this)
+        if (nav) {
+            nav.style.display = nav.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Show modal as fallback for now
+        showModal();
+    });
+}
+
+// ============================================
+// SCROLL ANIMATIONS
+// ============================================
+function initAnimations() {
+    // Intersection Observer for fade-in animations
     const observerOptions = {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'
     };
 
-    const observer = new IntersectionObserver((entries) => {
+    const fadeInObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
+                entry.target.classList.add('fade-in-visible');
 
-                // Animate stat numbers when visible
-                if (entry.target.classList.contains('stat-item')) {
-                    animateStatNumber(entry.target);
+                // Counter animation for stats
+                if (entry.target.classList.contains('stat')) {
+                    animateCounter(entry.target);
                 }
             }
         });
     }, observerOptions);
 
-    // Observe all animated elements
-    const animatedElements = document.querySelectorAll('.feature-card, .step, .stat-item, .disclaimer-card');
-    animatedElements.forEach(el => {
+    // Observe elements
+    const animatedElements = document.querySelectorAll('.movie-card, .category-card, .step-card, .stat');
+    animatedElements.forEach((el, index) => {
         el.style.opacity = '0';
         el.style.transform = 'translateY(30px)';
-        observer.observe(el);
+        el.style.transitionDelay = `${index * 0.05}s`;
+        fadeInObserver.observe(el);
     });
 
-    // Add visible class styles
+    // Add animation styles
     const style = document.createElement('style');
     style.textContent = `
-        .visible {
+        .fade-in-visible {
             opacity: 1 !important;
             transform: translateY(0) !important;
             transition: opacity 0.6s ease, transform 0.6s ease;
         }
     `;
     document.head.appendChild(style);
+
+    // Parallax for hero
+    initParallax();
 }
 
-// Animate stat numbers counting up
-function animateStatNumber(statItem) {
-    const numberEl = statItem.querySelector('.stat-number');
+// ============================================
+// COUNTER ANIMATION
+// ============================================
+function animateCounter(element) {
+    const numberEl = element.querySelector('.stat-number');
+    if (!numberEl || numberEl.dataset.animated) return;
+
+    numberEl.dataset.animated = 'true';
+
     const text = numberEl.textContent;
     const match = text.match(/(\d+)/);
-
     if (!match) return;
 
     const target = parseInt(match[1]);
-    const suffix = text.replace(/[\d,]/g, '');
+    const suffix = text.replace(/\d+/, '');
+
     let current = 0;
     const duration = 2000;
-    const increment = target / (duration / 16);
+    const steps = 60;
+    const increment = target / steps;
+    const stepTime = duration / steps;
 
-    const animate = () => {
+    const timer = setInterval(() => {
         current += increment;
-        if (current < target) {
-            numberEl.textContent = Math.floor(current).toLocaleString() + suffix;
-            requestAnimationFrame(animate);
-        } else {
-            numberEl.textContent = target.toLocaleString() + suffix;
+        if (current >= target) {
+            current = target;
+            clearInterval(timer);
         }
-    };
-
-    animate();
+        numberEl.textContent = Math.floor(current).toLocaleString() + suffix;
+    }, stepTime);
 }
 
-// Subtle parallax effect for background shapes
-function initParallaxEffect() {
-    const shapes = document.querySelectorAll('.shape');
+// ============================================
+// PARALLAX EFFECT
+// ============================================
+function initParallax() {
+    const hero = document.querySelector('.hero');
+    if (!hero) return;
 
-    window.addEventListener('mousemove', (e) => {
-        const x = (e.clientX - window.innerWidth / 2) / 50;
-        const y = (e.clientY - window.innerHeight / 2) / 50;
+    window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        const rate = scrolled * 0.3;
 
-        shapes.forEach((shape, index) => {
-            const speed = (index + 1) * 0.5;
-            shape.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
-        });
+        if (scrolled < window.innerHeight) {
+            hero.style.transform = `translateY(${rate}px)`;
+        }
     });
+
+    // Mouse move effect for hero
+    const heroBg = document.querySelector('.hero-bg');
+    if (heroBg) {
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX - window.innerWidth / 2) / 50;
+            const y = (e.clientY - window.innerHeight / 2) / 50;
+            heroBg.style.transform = `translate(${x}px, ${y}px)`;
+        });
+    }
 }
 
-// Enhanced hover effects
-function initHoverEffects() {
-    // Add ripple effect to telegram button
-    const telegramBtn = document.querySelector('.telegram-btn');
-    if (telegramBtn) {
-        telegramBtn.addEventListener('click', function (e) {
-            const rect = this.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+// ============================================
+// MOVIE CARD HOVER EFFECTS
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+    const cards = document.querySelectorAll('.movie-card');
 
-            const ripple = document.createElement('span');
-            ripple.style.cssText = `
-                position: absolute;
-                background: rgba(255, 255, 255, 0.3);
-                border-radius: 50%;
-                transform: scale(0);
-                animation: ripple 0.6s ease-out;
-                left: ${x}px;
-                top: ${y}px;
-                width: 10px;
-                height: 10px;
-                margin-left: -5px;
-                margin-top: -5px;
-                pointer-events: none;
-            `;
-
-            this.appendChild(ripple);
-
-            setTimeout(() => ripple.remove(), 600);
-        });
-
-        // Add ripple animation
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes ripple {
-                to {
-                    transform: scale(40);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
-    // Add tilt effect to feature cards
-    const cards = document.querySelectorAll('.feature-card');
     cards.forEach(card => {
-        card.addEventListener('mousemove', function (e) {
-            const rect = this.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-
-            const rotateX = (y - centerY) / 10;
-            const rotateY = (centerX - x) / 10;
-
-            this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px)`;
+        card.addEventListener('mouseenter', function () {
+            this.style.zIndex = '10';
         });
 
         card.addEventListener('mouseleave', function () {
-            this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
+            this.style.zIndex = '';
         });
-    });
-}
-
-// Optional typing effect for tagline
-function initTypingEffect() {
-    const tagline = document.querySelector('.tagline');
-    if (!tagline) return;
-
-    const text = tagline.textContent;
-    tagline.textContent = '';
-    tagline.style.visibility = 'visible';
-
-    let index = 0;
-    const typeSpeed = 50;
-
-    function type() {
-        if (index < text.length) {
-            tagline.textContent += text.charAt(index);
-            index++;
-            setTimeout(type, typeSpeed);
-        }
-    }
-
-    // Start typing after a short delay
-    setTimeout(type, 800);
-}
-
-// Smooth scroll for navigation (if any anchor links)
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
     });
 });
 
-// Add loading animation
+// ============================================
+// TYPING EFFECT FOR SEARCH PLACEHOLDER
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
+
+    const placeholders = [
+        'Search for movies...',
+        'Search for TV series...',
+        'Search for anime...',
+        'Try: Oppenheimer',
+        'Try: Squid Game',
+        'Try: One Piece'
+    ];
+
+    let currentIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let typingSpeed = 100;
+
+    function type() {
+        const current = placeholders[currentIndex];
+
+        if (isDeleting) {
+            searchInput.placeholder = current.substring(0, charIndex - 1);
+            charIndex--;
+            typingSpeed = 50;
+        } else {
+            searchInput.placeholder = current.substring(0, charIndex + 1);
+            charIndex++;
+            typingSpeed = 100;
+        }
+
+        if (!isDeleting && charIndex === current.length) {
+            isDeleting = true;
+            typingSpeed = 2000; // Pause before deleting
+        } else if (isDeleting && charIndex === 0) {
+            isDeleting = false;
+            currentIndex = (currentIndex + 1) % placeholders.length;
+            typingSpeed = 500; // Pause before typing next
+        }
+
+        setTimeout(type, typingSpeed);
+    }
+
+    // Start typing effect after a delay
+    setTimeout(type, 1000);
+});
+
+// ============================================
+// DROPDOWN BEHAVIOR FOR TOUCH DEVICES
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+    const dropdowns = document.querySelectorAll('.nav-item.dropdown');
+
+    dropdowns.forEach(dropdown => {
+        const link = dropdown.querySelector('.nav-link');
+
+        link.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                e.preventDefault();
+                dropdown.classList.toggle('active');
+            }
+        });
+    });
+});
+
+// ============================================
+// LOADING ANIMATION
+// ============================================
 window.addEventListener('load', () => {
     document.body.classList.add('loaded');
 
-    // Trigger hero animations
-    const hero = document.querySelector('.hero');
-    if (hero) {
-        hero.style.opacity = '0';
-        hero.style.transform = 'translateY(20px)';
+    // Animate hero content
+    const heroContent = document.querySelector('.hero-content');
+    if (heroContent) {
+        heroContent.style.opacity = '0';
+        heroContent.style.transform = 'translateY(30px)';
 
         setTimeout(() => {
-            hero.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-            hero.style.opacity = '1';
-            hero.style.transform = 'translateY(0)';
-        }, 100);
-    }
-});
-
-// Easter egg: Konami code
-let konamiCode = [];
-const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
-
-document.addEventListener('keydown', (e) => {
-    konamiCode.push(e.key);
-    konamiCode = konamiCode.slice(-10);
-
-    if (konamiCode.join(',') === konamiSequence.join(',')) {
-        // Trigger special animation
-        document.body.style.animation = 'rainbow 2s linear';
-        setTimeout(() => {
-            document.body.style.animation = '';
-        }, 2000);
-
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes rainbow {
-                0% { filter: hue-rotate(0deg); }
-                100% { filter: hue-rotate(360deg); }
-            }
-        `;
-        document.head.appendChild(style);
+            heroContent.style.transition = 'all 0.8s ease';
+            heroContent.style.opacity = '1';
+            heroContent.style.transform = 'translateY(0)';
+        }, 200);
     }
 });
