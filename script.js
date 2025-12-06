@@ -1,13 +1,13 @@
 /* ============================================
-   HARI'S GARAGE - Movie Portal JavaScript
+   HARI'S GARAGE - Interactive JavaScript
    ============================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
     initHeader();
-    initSearch();
+    initSearchRedirect();
     initAnimations();
-    initModal();
     initMobileMenu();
+    initTypingEffect();
 });
 
 // ============================================
@@ -15,19 +15,15 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================================
 function initHeader() {
     const header = document.querySelector('.header');
-    let lastScroll = 0;
 
     window.addEventListener('scroll', () => {
         const currentScroll = window.pageYOffset;
 
-        // Add shadow on scroll
         if (currentScroll > 50) {
             header.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
         } else {
             header.style.boxShadow = 'none';
         }
-
-        lastScroll = currentScroll;
     });
 
     // Smooth scroll for anchor links
@@ -51,106 +47,35 @@ function initHeader() {
 }
 
 // ============================================
-// SEARCH FUNCTIONALITY
+// SEARCH REDIRECT
 // ============================================
-function initSearch() {
+function initSearchRedirect() {
     const searchInput = document.getElementById('searchInput');
-    const searchBtn = document.getElementById('searchBtn');
+    const searchBox = document.querySelector('.search-box');
 
-    if (!searchInput || !searchBtn) return;
+    if (!searchInput) return;
 
-    const handleSearch = () => {
-        const query = searchInput.value.trim();
-        if (query) {
-            // Show modal first, then redirect
-            showModal();
-        } else {
-            searchInput.focus();
-            searchInput.classList.add('shake');
-            setTimeout(() => searchInput.classList.remove('shake'), 500);
-        }
-    };
-
-    searchBtn.addEventListener('click', handleSearch);
-    searchInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleSearch();
+    // Make the entire search box clickable
+    searchBox.addEventListener('click', (e) => {
+        // Don't redirect if clicking the button (it has its own link)
+        if (e.target.classList.contains('search-btn')) return;
+        window.open('https://t.me/+oLvCDNTpvGI5MmNl', '_blank');
     });
 
-    // Add shake animation
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-        .shake { animation: shake 0.5s ease; }
-    `;
-    document.head.appendChild(style);
+    searchInput.style.cursor = 'pointer';
 }
-
-// ============================================
-// MODAL
-// ============================================
-function initModal() {
-    const modal = document.getElementById('telegramModal');
-    if (!modal) return;
-
-    // Close modal on background click
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            closeModal();
-        }
-    });
-
-    // Close on escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeModal();
-    });
-}
-
-function showModal() {
-    const modal = document.getElementById('telegramModal');
-    if (modal) {
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-function closeModal() {
-    const modal = document.getElementById('telegramModal');
-    if (modal) {
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-}
-
-// Global function for onclick handlers
-window.redirectToTelegram = function () {
-    showModal();
-};
-
-window.closeModal = closeModal;
 
 // ============================================
 // MOBILE MENU
 // ============================================
 function initMobileMenu() {
     const menuBtn = document.getElementById('mobileMenuBtn');
-    const nav = document.querySelector('.nav');
 
     if (!menuBtn) return;
 
     menuBtn.addEventListener('click', () => {
-        menuBtn.classList.toggle('active');
-
-        // Toggle nav visibility (you can expand this)
-        if (nav) {
-            nav.style.display = nav.style.display === 'block' ? 'none' : 'block';
-        }
-
-        // Show modal as fallback for now
-        showModal();
+        // For now, redirect to Telegram
+        window.open('https://t.me/+oLvCDNTpvGI5MmNl', '_blank');
     });
 }
 
@@ -158,7 +83,6 @@ function initMobileMenu() {
 // SCROLL ANIMATIONS
 // ============================================
 function initAnimations() {
-    // Intersection Observer for fade-in animations
     const observerOptions = {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'
@@ -178,11 +102,14 @@ function initAnimations() {
     }, observerOptions);
 
     // Observe elements
-    const animatedElements = document.querySelectorAll('.movie-card, .category-card, .step-card, .stat');
+    const animatedElements = document.querySelectorAll(
+        '.ecosystem-card, .category-card, .step-card, .feature-card, .stat'
+    );
+
     animatedElements.forEach((el, index) => {
         el.style.opacity = '0';
         el.style.transform = 'translateY(30px)';
-        el.style.transitionDelay = `${index * 0.05}s`;
+        el.style.transition = `opacity 0.6s ease ${index * 0.05}s, transform 0.6s ease ${index * 0.05}s`;
         fadeInObserver.observe(el);
     });
 
@@ -192,13 +119,32 @@ function initAnimations() {
         .fade-in-visible {
             opacity: 1 !important;
             transform: translateY(0) !important;
-            transition: opacity 0.6s ease, transform 0.6s ease;
         }
     `;
     document.head.appendChild(style);
 
-    // Parallax for hero
+    // Hero animation
+    animateHero();
+
+    // Parallax
     initParallax();
+}
+
+// ============================================
+// HERO ANIMATION
+// ============================================
+function animateHero() {
+    const heroContent = document.querySelector('.hero-content');
+    if (!heroContent) return;
+
+    heroContent.style.opacity = '0';
+    heroContent.style.transform = 'translateY(30px)';
+
+    setTimeout(() => {
+        heroContent.style.transition = 'all 0.8s ease';
+        heroContent.style.opacity = '1';
+        heroContent.style.transform = 'translateY(0)';
+    }, 200);
 }
 
 // ============================================
@@ -237,60 +183,32 @@ function animateCounter(element) {
 // PARALLAX EFFECT
 // ============================================
 function initParallax() {
-    const hero = document.querySelector('.hero');
-    if (!hero) return;
-
-    window.addEventListener('scroll', () => {
-        const scrolled = window.pageYOffset;
-        const rate = scrolled * 0.3;
-
-        if (scrolled < window.innerHeight) {
-            hero.style.transform = `translateY(${rate}px)`;
-        }
-    });
-
-    // Mouse move effect for hero
     const heroBg = document.querySelector('.hero-bg');
-    if (heroBg) {
-        document.addEventListener('mousemove', (e) => {
-            const x = (e.clientX - window.innerWidth / 2) / 50;
-            const y = (e.clientY - window.innerHeight / 2) / 50;
-            heroBg.style.transform = `translate(${x}px, ${y}px)`;
-        });
-    }
+    if (!heroBg) return;
+
+    document.addEventListener('mousemove', (e) => {
+        const x = (e.clientX - window.innerWidth / 2) / 50;
+        const y = (e.clientY - window.innerHeight / 2) / 50;
+        heroBg.style.transform = `translate(${x}px, ${y}px)`;
+    });
 }
 
 // ============================================
-// MOVIE CARD HOVER EFFECTS
+// TYPING EFFECT FOR SEARCH
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
-    const cards = document.querySelectorAll('.movie-card');
-
-    cards.forEach(card => {
-        card.addEventListener('mouseenter', function () {
-            this.style.zIndex = '10';
-        });
-
-        card.addEventListener('mouseleave', function () {
-            this.style.zIndex = '';
-        });
-    });
-});
-
-// ============================================
-// TYPING EFFECT FOR SEARCH PLACEHOLDER
-// ============================================
-document.addEventListener('DOMContentLoaded', () => {
+function initTypingEffect() {
     const searchInput = document.getElementById('searchInput');
     if (!searchInput) return;
 
     const placeholders = [
-        'Search for movies...',
+        'Type any movie name...',
         'Search for TV series...',
-        'Search for anime...',
+        'Find your favorite anime...',
         'Try: Oppenheimer',
         'Try: Squid Game',
-        'Try: One Piece'
+        'Try: One Piece',
+        'Try: Leo 2023',
+        'Try: Jujutsu Kaisen'
     ];
 
     let currentIndex = 0;
@@ -313,54 +231,107 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!isDeleting && charIndex === current.length) {
             isDeleting = true;
-            typingSpeed = 2000; // Pause before deleting
+            typingSpeed = 2000;
         } else if (isDeleting && charIndex === 0) {
             isDeleting = false;
             currentIndex = (currentIndex + 1) % placeholders.length;
-            typingSpeed = 500; // Pause before typing next
+            typingSpeed = 500;
         }
 
         setTimeout(type, typingSpeed);
     }
 
-    // Start typing effect after a delay
     setTimeout(type, 1000);
-});
+}
 
 // ============================================
-// DROPDOWN BEHAVIOR FOR TOUCH DEVICES
+// CARD HOVER EFFECTS
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
-    const dropdowns = document.querySelectorAll('.nav-item.dropdown');
+    // Add hover glow effect to ecosystem cards
+    const ecoCards = document.querySelectorAll('.ecosystem-card');
 
-    dropdowns.forEach(dropdown => {
-        const link = dropdown.querySelector('.nav-link');
+    ecoCards.forEach(card => {
+        card.addEventListener('mouseenter', function () {
+            this.style.zIndex = '10';
+        });
 
-        link.addEventListener('click', (e) => {
-            if (window.innerWidth <= 768) {
-                e.preventDefault();
-                dropdown.classList.toggle('active');
+        card.addEventListener('mouseleave', function () {
+            this.style.zIndex = '';
+        });
+    });
+
+    // Category cards pulse effect
+    const categoryCards = document.querySelectorAll('.category-card');
+
+    categoryCards.forEach(card => {
+        card.addEventListener('mouseenter', function () {
+            const icon = this.querySelector('.category-icon');
+            if (icon) {
+                icon.style.transform = 'scale(1.2)';
+                icon.style.transition = 'transform 0.3s ease';
+            }
+        });
+
+        card.addEventListener('mouseleave', function () {
+            const icon = this.querySelector('.category-icon');
+            if (icon) {
+                icon.style.transform = 'scale(1)';
             }
         });
     });
 });
 
 // ============================================
-// LOADING ANIMATION
+// DEMO CHAT ANIMATION
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+    const demoBox = document.querySelector('.demo-box');
+    if (!demoBox) return;
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateDemo();
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+
+    observer.observe(demoBox);
+});
+
+function animateDemo() {
+    const messages = document.querySelectorAll('.demo-message');
+
+    messages.forEach((msg, index) => {
+        msg.style.opacity = '0';
+        msg.style.transform = 'translateY(20px)';
+
+        setTimeout(() => {
+            msg.style.transition = 'all 0.5s ease';
+            msg.style.opacity = '1';
+            msg.style.transform = 'translateY(0)';
+        }, index * 800 + 300);
+    });
+
+    // Animate buttons
+    const buttons = document.querySelectorAll('.demo-btn');
+    buttons.forEach((btn, index) => {
+        btn.style.opacity = '0';
+        btn.style.transform = 'scale(0.8)';
+
+        setTimeout(() => {
+            btn.style.transition = 'all 0.3s ease';
+            btn.style.opacity = '1';
+            btn.style.transform = 'scale(1)';
+        }, 1500 + index * 100);
+    });
+}
+
+// ============================================
+// PAGE LOADED
 // ============================================
 window.addEventListener('load', () => {
     document.body.classList.add('loaded');
-
-    // Animate hero content
-    const heroContent = document.querySelector('.hero-content');
-    if (heroContent) {
-        heroContent.style.opacity = '0';
-        heroContent.style.transform = 'translateY(30px)';
-
-        setTimeout(() => {
-            heroContent.style.transition = 'all 0.8s ease';
-            heroContent.style.opacity = '1';
-            heroContent.style.transform = 'translateY(0)';
-        }, 200);
-    }
 });
