@@ -1,4 +1,190 @@
-// Smooth scrolling for navigation links
+/* ============================================
+   HARI'S GARAGE - Interactive JavaScript
+   ============================================ */
+
+// Wait for DOM to load
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize all animations and interactions
+    initScrollAnimations();
+    initParallaxEffect();
+    initHoverEffects();
+    initTypingEffect();
+});
+
+// Scroll-based reveal animations
+function initScrollAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+
+                // Animate stat numbers when visible
+                if (entry.target.classList.contains('stat-item')) {
+                    animateStatNumber(entry.target);
+                }
+            }
+        });
+    }, observerOptions);
+
+    // Observe all animated elements
+    const animatedElements = document.querySelectorAll('.feature-card, .step, .stat-item, .disclaimer-card');
+    animatedElements.forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        observer.observe(el);
+    });
+
+    // Add visible class styles
+    const style = document.createElement('style');
+    style.textContent = `
+        .visible {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// Animate stat numbers counting up
+function animateStatNumber(statItem) {
+    const numberEl = statItem.querySelector('.stat-number');
+    const text = numberEl.textContent;
+    const match = text.match(/(\d+)/);
+
+    if (!match) return;
+
+    const target = parseInt(match[1]);
+    const suffix = text.replace(/[\d,]/g, '');
+    let current = 0;
+    const duration = 2000;
+    const increment = target / (duration / 16);
+
+    const animate = () => {
+        current += increment;
+        if (current < target) {
+            numberEl.textContent = Math.floor(current).toLocaleString() + suffix;
+            requestAnimationFrame(animate);
+        } else {
+            numberEl.textContent = target.toLocaleString() + suffix;
+        }
+    };
+
+    animate();
+}
+
+// Subtle parallax effect for background shapes
+function initParallaxEffect() {
+    const shapes = document.querySelectorAll('.shape');
+
+    window.addEventListener('mousemove', (e) => {
+        const x = (e.clientX - window.innerWidth / 2) / 50;
+        const y = (e.clientY - window.innerHeight / 2) / 50;
+
+        shapes.forEach((shape, index) => {
+            const speed = (index + 1) * 0.5;
+            shape.style.transform = `translate(${x * speed}px, ${y * speed}px)`;
+        });
+    });
+}
+
+// Enhanced hover effects
+function initHoverEffects() {
+    // Add ripple effect to telegram button
+    const telegramBtn = document.querySelector('.telegram-btn');
+    if (telegramBtn) {
+        telegramBtn.addEventListener('click', function (e) {
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const ripple = document.createElement('span');
+            ripple.style.cssText = `
+                position: absolute;
+                background: rgba(255, 255, 255, 0.3);
+                border-radius: 50%;
+                transform: scale(0);
+                animation: ripple 0.6s ease-out;
+                left: ${x}px;
+                top: ${y}px;
+                width: 10px;
+                height: 10px;
+                margin-left: -5px;
+                margin-top: -5px;
+                pointer-events: none;
+            `;
+
+            this.appendChild(ripple);
+
+            setTimeout(() => ripple.remove(), 600);
+        });
+
+        // Add ripple animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(40);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // Add tilt effect to feature cards
+    const cards = document.querySelectorAll('.feature-card');
+    cards.forEach(card => {
+        card.addEventListener('mousemove', function (e) {
+            const rect = this.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+
+            const rotateX = (y - centerY) / 10;
+            const rotateY = (centerX - x) / 10;
+
+            this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px)`;
+        });
+
+        card.addEventListener('mouseleave', function () {
+            this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
+        });
+    });
+}
+
+// Optional typing effect for tagline
+function initTypingEffect() {
+    const tagline = document.querySelector('.tagline');
+    if (!tagline) return;
+
+    const text = tagline.textContent;
+    tagline.textContent = '';
+    tagline.style.visibility = 'visible';
+
+    let index = 0;
+    const typeSpeed = 50;
+
+    function type() {
+        if (index < text.length) {
+            tagline.textContent += text.charAt(index);
+            index++;
+            setTimeout(type, typeSpeed);
+        }
+    }
+
+    // Start typing after a short delay
+    setTimeout(type, 800);
+}
+
+// Smooth scroll for navigation (if any anchor links)
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
@@ -12,142 +198,46 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-// Parallax effect for sections
-window.addEventListener('scroll', () => {
-    const scrolled = window.pageYOffset;
-    const parallaxElements = document.querySelectorAll('.content');
-    
-    parallaxElements.forEach((element, index) => {
-        const speed = 0.5;
-        const yPos = -(scrolled * speed);
-        element.style.transform = `translateY(${yPos * 0.1}px)`;
-    });
-});
-
-// Add scroll-triggered animations
-const observerOptions = {
-    threshold: 0.2,
-    rootMargin: '0px 0px -100px 0px'
-};
-
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.style.opacity = '1';
-            entry.target.style.transform = 'translateY(0)';
-        }
-    });
-}, observerOptions);
-
-document.querySelectorAll('.section').forEach(section => {
-    observer.observe(section);
-});
-
-// Create additional stars dynamically
-function createStars() {
-    const starsContainer = document.querySelector('.stars');
-    const numberOfStars = 200;
-    
-    for (let i = 0; i < numberOfStars; i++) {
-        const star = document.createElement('div');
-        star.className = 'star';
-        star.style.position = 'absolute';
-        star.style.width = Math.random() * 3 + 'px';
-        star.style.height = star.style.width;
-        star.style.backgroundColor = 'white';
-        star.style.borderRadius = '50%';
-        star.style.top = Math.random() * 100 + '%';
-        star.style.left = Math.random() * 100 + '%';
-        star.style.opacity = Math.random();
-        star.style.animation = `twinkle ${Math.random() * 5 + 3}s infinite`;
-        starsContainer.appendChild(star);
-    }
-}
-
-// Twinkle animation
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes twinkle {
-        0%, 100% { opacity: 0.2; }
-        50% { opacity: 1; }
-    }
-`;
-document.head.appendChild(style);
-
-// Initialize stars
-createStars();
-
-// Mouse trail effect
-let mouseX = 0;
-let mouseY = 0;
-const trail = [];
-const trailLength = 20;
-
-document.addEventListener('mousemove', (e) => {
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-});
-
-function createTrailParticle() {
-    const particle = document.createElement('div');
-    particle.className = 'trail-particle';
-    particle.style.position = 'fixed';
-    particle.style.width = '4px';
-    particle.style.height = '4px';
-    particle.style.borderRadius = '50%';
-    particle.style.background = 'rgba(138, 43, 226, 0.6)';
-    particle.style.pointerEvents = 'none';
-    particle.style.left = mouseX + 'px';
-    particle.style.top = mouseY + 'px';
-    particle.style.transition = 'all 0.5s ease-out';
-    particle.style.zIndex = '9999';
-    
-    document.body.appendChild(particle);
-    
-    setTimeout(() => {
-        particle.style.opacity = '0';
-        particle.style.transform = 'scale(0)';
-    }, 10);
-    
-    setTimeout(() => {
-        particle.remove();
-    }, 500);
-}
-
-let lastTrailTime = 0;
-document.addEventListener('mousemove', (e) => {
-    const now = Date.now();
-    if (now - lastTrailTime > 50) {
-        createTrailParticle();
-        lastTrailTime = now;
-    }
-});
-
-// Add scroll progress indicator
-const progressBar = document.createElement('div');
-progressBar.style.position = 'fixed';
-progressBar.style.top = '0';
-progressBar.style.left = '0';
-progressBar.style.width = '0%';
-progressBar.style.height = '3px';
-progressBar.style.background = 'linear-gradient(90deg, #8a2be2, #00bfff)';
-progressBar.style.zIndex = '10000';
-progressBar.style.transition = 'width 0.1s ease-out';
-document.body.appendChild(progressBar);
-
-window.addEventListener('scroll', () => {
-    const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-    const scrolled = (window.pageYOffset / windowHeight) * 100;
-    progressBar.style.width = scrolled + '%';
-});
-
 // Add loading animation
 window.addEventListener('load', () => {
-    document.body.style.opacity = '0';
-    setTimeout(() => {
-        document.body.style.transition = 'opacity 1s ease-in';
-        document.body.style.opacity = '1';
-    }, 100);
+    document.body.classList.add('loaded');
+
+    // Trigger hero animations
+    const hero = document.querySelector('.hero');
+    if (hero) {
+        hero.style.opacity = '0';
+        hero.style.transform = 'translateY(20px)';
+
+        setTimeout(() => {
+            hero.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+            hero.style.opacity = '1';
+            hero.style.transform = 'translateY(0)';
+        }, 100);
+    }
 });
 
-console.log('🌌 Universal Journey Website Loaded Successfully!');
+// Easter egg: Konami code
+let konamiCode = [];
+const konamiSequence = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+
+document.addEventListener('keydown', (e) => {
+    konamiCode.push(e.key);
+    konamiCode = konamiCode.slice(-10);
+
+    if (konamiCode.join(',') === konamiSequence.join(',')) {
+        // Trigger special animation
+        document.body.style.animation = 'rainbow 2s linear';
+        setTimeout(() => {
+            document.body.style.animation = '';
+        }, 2000);
+
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes rainbow {
+                0% { filter: hue-rotate(0deg); }
+                100% { filter: hue-rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+});
